@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Trash2 } from "lucide-react";
+import { confirmAlert } from "react-confirm-alert";
 
 export default function Reports() {
   const [data, setData] = useState<any[]>([]);
@@ -15,12 +16,18 @@ export default function Reports() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/entries")
-      .then((res) => res.json())
-      .then((resData) => {
-        setData(resData);
-      });
+    fetchEntries();
   }, []);
+
+  const fetchEntries = async () => {
+    try {
+      const res = await fetch("/api/entries");
+      const resData = await res.json();
+      setData(resData);
+    } catch (error) {
+      console.error("Failed to fetch entries", error);
+    }
+  };
 
   const filteredData = useMemo(() => {
     return data.filter((row) => {
@@ -102,6 +109,28 @@ export default function Reports() {
     doc.save("collection-report.pdf");
   };
 
+  const handleDelete = (id: string) => {
+    confirmAlert({
+      title: "Confirm Delete",
+      message: "Are you sure you want to delete this collection entry?",
+      buttons: [
+        {
+          label: "Yes, Delete",
+          onClick: async () => {
+            await fetch(`/api/entries/${id}`, {
+              method: "DELETE",
+            });
+
+            fetchEntries()
+          },
+        },
+        {
+          label: "Cancel",
+        },
+      ],
+    });
+  };
+
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-10 bg-[#0f172a]">
       {/* HEADER */}
@@ -179,6 +208,7 @@ export default function Reports() {
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Amount</th>
               <th className="px-6 py-4">Notes</th>
+              <th className="px-6 py-4">Action</th>
             </tr>
           </thead>
 
@@ -195,12 +225,21 @@ export default function Reports() {
                   ₹{row.Amount}
                 </td>
                 <td className="px-6 py-4">{row.Notes?.trim() || "-"}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleDelete(row.Id)}
+                    className="text-red-600 hover:text-red-800 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
 
             {filteredData.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-gray-400">
+                <td colSpan={7} className="py-6 text-center text-gray-400">
                   No records found
                 </td>
               </tr>
@@ -235,6 +274,15 @@ export default function Reports() {
               {row.Notes && (
                 <div className="italic text-gray-500">{row.Notes}</div>
               )}
+              <div className="pt-2 border-t mt-2 flex justify-end">
+                <button
+                  onClick={() => handleDelete(row.Id)}
+                  className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 cursor-pointer"
+                >
+                  <Trash2 size={14} />
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         ))}

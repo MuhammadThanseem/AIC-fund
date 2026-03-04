@@ -52,7 +52,7 @@ function readCSV() {
 
 function writeCSV(data: any[]) {
   const header =
-    "Id,BoxNumber,CustomerName,MobileNumber,CollectionDate,Amount,Notes\n";
+    "id,BoxNumber,CustomerName,MobileNumber,CollectionDate,Amount,Notes\n";
 
   const rows = data
     .map(
