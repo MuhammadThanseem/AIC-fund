@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import StaticCalendar from "../componenets/CalendarWidget";
 
 export default function Home() {
   const today = new Date().toISOString().split("T")[0];
@@ -16,7 +17,37 @@ export default function Home() {
     notes: "",
   });
 
+  const [recent, setRecent] = useState<any[]>([]);
+  const isFormValid =
+    form.customerName.trim() && form.collectionDate && Number(form.amount) > 0;
+
+  useEffect(() => {
+    loadRecentCollections();
+  }, []);
+
+  const loadRecentCollections = async () => {
+    const res = await fetch("/api/entries?recent=true");
+    const data = await res.json();
+    setRecent(data);
+  };
+
   const handleSubmit = async () => {
+    // 🔴 Validation
+    if (!form.customerName.trim()) {
+      toast.error("Customer Name is required");
+      return;
+    }
+
+    if (!form.collectionDate) {
+      toast.error("Collection Date is required");
+      return;
+    }
+
+    if (!form.amount || Number(form.amount) <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+
     try {
       const res = await fetch("/api/entries", {
         method: "POST",
@@ -26,7 +57,8 @@ export default function Home() {
 
       if (!res.ok) throw new Error("Failed");
 
-      toast.success("Collection Saved Successfully ✅");
+      toast.success("Collection Saved Successfully");
+      loadRecentCollections();
 
       const today = new Date().toISOString().split("T")[0];
 
@@ -39,9 +71,10 @@ export default function Home() {
         notes: "",
       });
     } catch (error) {
-      toast.error("Something went wrong ❌");
+      toast.error("Something went wrong");
     }
   };
+
   return (
     <div>
       {/* Page Content */}
@@ -73,7 +106,7 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold mb-2 text-gray-800">
-                  CUSTOMER NAME
+                  CUSTOMER NAME <span className="text-red-500">*</span>
                 </label>
                 <input
                   className="w-full border rounded-lg px-4 py-3 placeholder:text-gray-400  text-gray-800"
@@ -102,7 +135,7 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold mb-2 text-gray-800">
-                  COLLECTION DATE
+                  COLLECTION DATE <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -116,7 +149,7 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-semibold mb-2 text-gray-800">
-                  AMOUNT COLLECTED
+                  AMOUNT COLLECTED <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -144,7 +177,13 @@ export default function Home() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-lg font-semibold text-lg transition"
+              disabled={!isFormValid}
+              className={`w-full py-4 rounded-lg font-semibold text-lg transition
+    ${
+      isFormValid
+        ? "bg-green-500 hover:bg-green-600 text-white"
+        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+    }`}
             >
               Confirm Collection
             </button>
@@ -154,10 +193,7 @@ export default function Home() {
           <div className="space-y-6">
             {/* Calendar Placeholder */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="font-semibold mb-4 text-gray-800">October 2023</h3>
-              <div className="text-gray-400 text-sm">
-                (Calendar UI can be added using a date picker library)
-              </div>
+              <StaticCalendar />
             </div>
 
             {/* Recent Collections */}
@@ -165,21 +201,24 @@ export default function Home() {
               <h3 className="font-semibold mb-4">Recent Collections</h3>
 
               <div className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">BX-045 - John Wick</p>
-                    <p className="text-gray-400">2 hours ago</p>
-                  </div>
-                  <div className="font-semibold">$120.00</div>
-                </div>
+                {recent.length === 0 && (
+                  <p className="text-gray-400">No collections yet</p>
+                )}
 
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">BX-112 - Jane Smith</p>
-                    <p className="text-gray-400">5 hours ago</p>
+                {recent.map((item) => (
+                  <div key={item.Id} className="flex justify-between">
+                    <div>
+                      <p className="font-medium">
+                        {item.BoxNumber} - {item.CustomerName}
+                      </p>
+                      <p className="text-gray-400">{item.CollectionDate}</p>
+                    </div>
+
+                    <div className="font-semibold text-green-600">
+                      ₹ {Number(item.Amount).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="font-semibold">$450.00</div>
-                </div>
+                ))}
               </div>
 
               <Link
