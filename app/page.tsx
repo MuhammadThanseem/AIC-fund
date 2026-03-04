@@ -103,47 +103,47 @@ export default function Reports() {
   };
 
   return (
-    <div className="min-h-screen p-10">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-10 bg-[#0f172a]">
       {/* HEADER */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
             Collection History Report
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-400 mt-1 text-sm">
             View and manage all fund collection transactions.
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => router.push("/collection")}
-            className="flex items-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg"
           >
             <Plus size={18} />
-            <span>Add New Collection</span>
+            Add New Collection
           </button>
 
           <button
             onClick={exportToPDF}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             <Download size={18} />
-            <span>Export PDF</span>
+            Export PDF
           </button>
         </div>
       </div>
 
-      {/* 🔍 FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border mb-6 flex flex-wrap gap-4 items-end text-gray-800">
-        <div className="flex-1 min-w-[220px]">
+      {/* FILTER BAR */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border mb-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 text-gray-800">
+        <div className="md:col-span-2">
           <label className="text-sm text-gray-600">Search</label>
           <input
             type="text"
             placeholder="Box / Customer / Mobile / Notes"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border rounded-lg text-gray-800"
+            className="w-full mt-1 px-3 py-2 border rounded-lg"
           />
         </div>
 
@@ -153,7 +153,7 @@ export default function Reports() {
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className="block mt-1 px-3 py-2 border rounded-lg"
+            className="w-full mt-1 px-3 py-2 border rounded-lg"
           />
         </div>
 
@@ -163,54 +163,44 @@ export default function Reports() {
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            className="block mt-1 px-3 py-2 border rounded-lg"
+            className="w-full mt-1 px-3 py-2 border rounded-lg"
           />
         </div>
       </div>
 
-      {/* Table Card */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
+      {/* DESKTOP TABLE */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border overflow-x-auto text-gray-800">
         <table className="w-full min-w-[900px] text-left">
           <thead className="bg-[#eef3f0] text-gray-600 text-sm uppercase">
             <tr>
               <th className="px-6 py-4">Box No</th>
               <th className="px-6 py-4">Customer</th>
-
-              {/* Hide on very small screens */}
-              <th className="px-6 py-4 hidden sm:table-cell">Mobile</th>
-              <th className="px-6 py-4 hidden md:table-cell">Date</th>
+              <th className="px-6 py-4">Mobile</th>
+              <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Amount</th>
-              <th className="px-6 py-4 hidden lg:table-cell">Notes</th>
+              <th className="px-6 py-4">Notes</th>
             </tr>
           </thead>
 
-          <tbody className="text-gray-800">
+          <tbody>
             {filteredData.map((row, i) => (
               <tr key={i} className="border-t hover:bg-gray-50">
                 <td className="px-6 py-4">{row.BoxNumber}</td>
                 <td className="px-6 py-4 font-medium">{row.CustomerName}</td>
-
-                <td className="px-6 py-4 hidden sm:table-cell">
-                  {row.MobileNumber}
-                </td>
-
-                <td className="px-6 py-4 hidden md:table-cell">
+                <td className="px-6 py-4">{row.MobileNumber}</td>
+                <td className="px-6 py-4">
                   {new Date(row.CollectionDate).toLocaleDateString()}
                 </td>
-
                 <td className="px-6 py-4 font-semibold text-green-600">
                   ₹{row.Amount}
                 </td>
-
-                <td className="px-6 py-4 hidden lg:table-cell">
-                  {row.Notes?.trim() || "-"}
-                </td>
+                <td className="px-6 py-4">{row.Notes?.trim() || "-"}</td>
               </tr>
             ))}
 
             {filteredData.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-gray-400">
+                <td colSpan={6} className="py-6 text-center text-gray-400">
                   No records found
                 </td>
               </tr>
@@ -218,30 +208,46 @@ export default function Reports() {
           </tbody>
         </table>
 
-        {/* TOTAL */}
-        <div className="border-t bg-[#f0f6f2] px-6 py-4 flex justify-end text-gray-800">
-          <div className="text-lg font-semibold">
+        <div className="border-t bg-[#f0f6f2] px-6 py-4 text-right">
+          <span className="text-lg font-semibold">
             Total:{" "}
             <span className="text-green-600">₹{total.toLocaleString()}</span>
-          </div>
+          </span>
         </div>
       </div>
 
-      {/* Pagination
-      <div className="flex justify-end mt-6 gap-2">
-        <button className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 text-gray-800">
-          Previous
-        </button>
-        <button className="px-4 py-2 border rounded-lg bg-green-500 text-white">
-          1
-        </button>
-        <button className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 text-gray-800">
-          2
-        </button>
-        <button className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 text-gray-800">
-          Next
-        </button>
-      </div> */}
+      {/* MOBILE CARDS */}
+      <div className="md:hidden space-y-4  text-gray-800">
+        {filteredData.map((row, i) => (
+          <div
+            key={i}
+            className="bg-white rounded-xl shadow-sm border p-4 space-y-2"
+          >
+            <div className="flex justify-between">
+              <span className="font-semibold">Box #{row.BoxNumber}</span>
+              <span className="font-bold text-green-600">₹{row.Amount}</span>
+            </div>
+
+            <div className="text-sm text-gray-600">
+              <div>{row.CustomerName}</div>
+              <div>{row.MobileNumber}</div>
+              <div>{new Date(row.CollectionDate).toLocaleDateString()}</div>
+              {row.Notes && (
+                <div className="italic text-gray-500">{row.Notes}</div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {filteredData.length === 0 && (
+          <div className="text-center text-gray-400 py-6">No records found</div>
+        )}
+
+        <div className="bg-white rounded-xl border p-4 text-right font-semibold">
+          Total:{" "}
+          <span className="text-green-600">₹{total.toLocaleString()}</span>
+        </div>
+      </div>
     </div>
   );
 }
